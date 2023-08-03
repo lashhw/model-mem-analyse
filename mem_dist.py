@@ -1,9 +1,25 @@
 import sys 
+import matplotlib.pyplot as plt
 
 def parseline(f):
     return [int(x) for x in f.readline().split()]
 
+def size_text(num_bytes):
+    size_name = ['B', 'K', 'M', 'G']
+    size_idx = 0
+    ret = num_bytes
+    while ret >= 1024:
+        size_idx += 1
+        ret /= 1024
+    return f'{round(ret)}{size_name[size_idx]}'
+
+if len(sys.argv) != 4:
+    print('usage: python mem_dist.py in.graph in.svg out.svg')
+    exit(1)
 graph_input = sys.argv[1]
+svg_input = sys.argv[2]
+svg_output = sys.argv[3]
+
 with open(graph_input) as f:
     num_inputs, = parseline(f)
     inputs = parseline(f)
@@ -135,3 +151,18 @@ print(mem)
 
 for x in retaining.keys():
     assert(x in outputs)
+
+with open(svg_input) as f:
+    svg = f.read()
+for op_idx in range(num_ops):
+    end = svg.find('</text>', svg.find(f'node-id-{op_idx}'))
+    start = svg.rfind('>', 0, end)
+    orig = svg[start + 1: end]
+    new = size_text(mem[op_idx])
+    middle = f' onmouseover="this.innerHTML=\'{orig}\'" onmouseout="this.innerHTML=\'{new}\'">{new}'
+    svg = svg[:start] + middle + svg[end:]
+with open(svg_output, 'w') as f:
+    f.write(svg)
+
+plt.bar(mem.keys(), mem.values())
+plt.show()
