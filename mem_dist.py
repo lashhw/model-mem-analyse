@@ -165,4 +165,6 @@ with open(svg_output, 'w') as f:
     f.write(svg)
 
 plt.bar(mem.keys(), mem.values())
+plt.xlabel('op index')
+plt.ylabel('minimum RAM (bytes)')
 plt.show()
