@@ -1,13 +1,10 @@
 import sys 
-import matplotlib.pyplot as plt
 
 def parseline(f):
     return [int(x) for x in f.readline().split()]
 
 if __name__ == "__main__":
-    #graph_input = sys.argv[1]
-    graph_input = 'mobilevit_xxs_mod.graph'
-    #graph_input = 'attention.graph'
+    graph_input = sys.argv[1]
     with open(graph_input) as f:
         num_inputs, = parseline(f)
         inputs = parseline(f)
@@ -48,11 +45,12 @@ if __name__ == "__main__":
     output_to_op = {}
     for idx, (_, op_outputs) in enumerate(ops):
         for op_output in op_outputs:
+            assert(op_output != -1)
             assert(op_output not in output_to_op)
             output_to_op[op_output] = idx
     print(output_to_op)
 
-    for op_inputs, op_outputs in ops:
+    for op_inputs, _ in ops:
         for op_input in op_inputs:
             if op_input == -1:
                 continue
@@ -67,8 +65,7 @@ if __name__ == "__main__":
         for op_input in op_inputs:
             if op_input == -1:
                 continue
-            from_other_op = (op_input in output_to_op)
-            if from_other_op:
+            if op_input in output_to_op:
                 graph[output_to_op[op_input]].append((op_idx, op_input))
     print(graph)
 
@@ -103,13 +100,17 @@ if __name__ == "__main__":
     '''
 
     retaining = {}
-    for op_inputs, _ in ops:
+    for op_idx, (op_inputs, op_outputs) in enumerate(ops):
         for op_input in op_inputs:
             if op_input in inputs:
+                rev_graph[op_idx].append((-1, op_input))
                 if op_input in retaining:
                     retaining[op_input] += 1
                 else:
                     retaining[op_input] = 1
+        for op_output in op_outputs:
+            if op_output in outputs:
+                graph[op_idx].append((-1, op_output))
     print(retaining)
 
     mem = {}
@@ -133,5 +134,5 @@ if __name__ == "__main__":
                 retaining[tensor_idx] -= 1
     print(mem)
 
-    plt.plot(mem.values())
-    plt.show()
+    for x in retaining.keys():
+        assert(x in outputs)
