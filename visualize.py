@@ -534,6 +534,8 @@ def create_graph(tflite_input, input_is_filepath=True):  # pylint: disable=inval
         size = 4 * int(np.prod(x["shape"]))
       elif typename == "INT8":
         size = int(np.prod(x["shape"]))
+      elif typename == "UINT8":
+        size = int(np.prod(x["shape"]))
       else:
         assert(False)
       graph += f'{size} {x["buffer"]}\n'
